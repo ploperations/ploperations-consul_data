@@ -1,88 +1,114 @@
 
-# consul_data
+# Use data from Consul in Puppet code
 
-Welcome to your new module. A short overview of the generated parts can be found in the PDK documentation at https://puppet.com/pdk/latest/pdk_generating_modules.html .
-
-The README template below provides a starting point with details about what information to include in your README.
+![](https://img.shields.io/puppetforge/pdk-version/ploperations/consul_data.svg?style=popout)
+![](https://img.shields.io/puppetforge/v/ploperations/consul_data.svg?style=popout)
+![](https://img.shields.io/puppetforge/dt/ploperations/consul_data.svg?style=popout)
 
 #### Table of Contents
 
 1. [Description](#description)
-2. [Setup - The basics of getting started with consul_data](#setup)
-    * [What consul_data affects](#what-consul_data-affects)
-    * [Setup requirements](#setup-requirements)
-    * [Beginning with consul_data](#beginning-with-consul_data)
-3. [Usage - Configuration options and additional functionality](#usage)
-4. [Limitations - OS compatibility, etc.](#limitations)
-5. [Development - Guide for contributing to the module](#development)
+2. [Setup](#setup)
+3. [Usage & Reference](#usage--reference)
+   - [Query the Consul agent on a node directly](#query-the-consul-agent-on-a-node-directly)
+4. [Development](#development)
 
 ## Description
 
-Briefly tell users why they might want to use your module. Explain what your module does and what kind of problems users can solve with it.
-
-This should be a fairly short description helps the user decide if your module is what they want.
+`consul_data` provides a simple way to interact with Consul. You can get or set
+key/value pairs and query for the nodes backing a service. You can also wrap
+function calls in `Deferred()` to query the local Consul agent on a node
+instead of reaching out to your Consul cluster from the Puppet master.
 
 ## Setup
 
-### What consul_data affects **OPTIONAL**
+All that's required to use this module is it being added to your Puppetfile
+and pluginsync being enabled.
 
-If it's obvious what your module touches, you can skip this section. For example, folks can probably figure out that your mysql_instance module affects their MySQL instances.
+## Usage & Reference
 
-If there's more that they should know about, though, this is the place to mention:
+**`consul_data::get_key($consul_url, $key, $key_return_format)`**
 
-* Files, packages, services, or operations that the module will alter, impact, or execute.
-* Dependencies that your module automatically installs.
-* Warnings or other important notices.
+Get the value of a key from Consul
 
-### Setup Requirements **OPTIONAL**
+- `consul_url`: The full url including port for querying Consul
+- `key`: The key you wish to query for
+- `key_return_format`: The format in which to return the value of the key key.
+   - Defaults to `string` but may also be `hash`, `json`, or `json_pretty`.
+   - All options other than `string` assume the data is stored in JSON format.
 
-If your module requires anything extra before setting up (pluginsync enabled, another module, etc.), mention it here.
+This will return the value of the key in the specified format.
 
-If your most recent release breaks compatibility or requires particular steps for upgrading, you might want to include an additional "Upgrading" section here.
+**`consul_data::get_service_nodes($consul_url, $service)`**
 
-### Beginning with consul_data
+Querys for nodes providing a given service
 
-The very basic steps needed for a user to get the module up and running. This can include setup steps, if necessary, or it can be an example of the most basic use of the module.
+- `consul_url`: The full url including port for querying Consul
+- `service`: The service you want to get a list of nodes for
 
-## Usage
+This will return a `Hash` representing the JSON response from Consul.
 
-Include usage examples for common use cases in the **Usage** section. Show your users how to use your module to solve problems, and be sure to include code examples. Include three to five examples of the most important or common tasks a user can accomplish with your module. Show users how to accomplish more complex tasks that involve different types, classes, and functions working in tandem.
+Example: Get a list of nodes running Consul and their IP addresses
 
-## Reference
-
-This section is deprecated. Instead, add reference information to your code as Puppet Strings comments, and then use Strings to generate a REFERENCE.md in your module. For details on how to add code comments and generate documentation with Strings, see the Puppet Strings [documentation](https://puppet.com/docs/puppet/latest/puppet_strings.html) and [style guide](https://puppet.com/docs/puppet/latest/puppet_strings_style.html)
-
-If you aren't ready to use Strings yet, manually create a REFERENCE.md in the root of your module directory and list out each of your module's classes, defined types, facts, functions, Puppet tasks, task plans, and resource types and providers, along with the parameters for each.
-
-For each element (class, defined type, function, and so on), list:
-
-  * The data type, if applicable.
-  * A description of what the element does.
-  * Valid values, if the data type doesn't make it obvious.
-  * Default value, if any.
-
-For example:
-
-```
-### `pet::cat`
-
-#### Parameters
-
-##### `meow`
-
-Enables vocalization in your cat. Valid options: 'string'.
-
-Default: 'medium-loud'.
+```puppet
+$data = consul_data::get_service_nodes('https://consul-app.example.com:8500', 'consul')
+$data.each |$consul_node| {
+  notify { "${consul_node['Node']} is at ${consul_node['Address']}": }
+}
 ```
 
-## Limitations
+**`consul_data::set_key($consul_url, $key, $value)`**
 
-In the Limitations section, list any incompatibilities, known issues, or other warnings.
+Set, update, or delete a key in Consul
+
+- `consul_url`: The full url including port for querying Consul
+- `key`: The key you wish to set, update, or delete
+- `value`:
+  - if set to `undef` the specified key will be deleted
+  - if set to a string the key will be updated to contain that string
+  - if set to a hash or and array of hashes the key will be updated to contain
+    the JSON representation of that value passed in.
+
+### Query the Consul agent on a node directly
+
+You can take advantage of `Deferred()` to interact with the Consul agent on a
+node directly. For example:
+
+```puppet
+$some_value_from_consul = Deferred('consul_data::get_key', [$consul_url, 'foo', 'json_pretty'])
+
+file { $some_config_file:
+  ensure  => file,
+  content => $some_value_from_consul,
+}
+```
+
+You can also use a templated file to benefit from querying the node's agent:
+
+```puppet
+$variables = {
+  'nodes_hash' => Deferred('consul_data::get_service_nodes',[
+    'https://consul-app.example.com:8500',
+    'my-service'
+  ]),
+}
+
+# use inline_epp(), and file() to compile the template source into the catalog
+file { '/etc/my-service.conf':
+  ensure  => file,
+  content => Deferred('inline_epp', [
+    file('mymodule/my-service.conf.epp'),
+    $variables
+  ]),
+}
+```
+
+_Note_: the tempalte resides at `mymodule/files/my-service.conf.epp` as opposed
+to in the `templates` directory.
+
+In this example, you could have a template that used values found in the hash
+`nodes_hash` such as the node names and their IP addresses.
 
 ## Development
 
-In the Development section, tell other users the ground rules for contributing to your project and how they should submit their work.
-
-## Release Notes/Contributors/Etc. **Optional**
-
-If you aren't using changelog, put your release notes here (though you should consider using changelog). You can also add any additional sections you feel are necessary or important to include here. Please use the `## ` header.
+Pull requests are welcome!

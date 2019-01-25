@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
+This is the initial release of the module.
+
 **Bugfixes**
 
 **Known Issues**
