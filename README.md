@@ -103,7 +103,7 @@ file { '/etc/my-service.conf':
 }
 ```
 
-_Note_: the tempalte resides at `mymodule/files/my-service.conf.epp` as opposed
+_Note_: the template resides at `mymodule/files/my-service.conf.epp` as opposed
 to in the `templates` directory.
 
 In this example, you could have a template that used values found in the hash
