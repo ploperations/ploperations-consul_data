@@ -32,7 +32,9 @@ module PuppetX
           # and port; it's possible to generate a URI::Generic when a scheme
           # is not defined, so double check here to make sure at least
           # host is defined.
-          raise Puppet::Error, "Unable to parse a hostname from #{consul_url}" unless uri.hostname
+          unless uri.hostname
+            raise Puppet::Error, "Unable to parse a hostname from '#{consul_url}'. 'consul_url' should be complete URL including http(s) and port."
+          end
 
           # Getting to here means no error was raised. Now we need to reference
           # the thing that we want returned to the caller: the uri variable.
