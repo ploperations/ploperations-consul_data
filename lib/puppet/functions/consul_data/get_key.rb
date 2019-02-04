@@ -1,4 +1,5 @@
 require_relative '../../../puppet_x/ploperations/consul_data/common'
+require_relative '../../../puppet_x/ploperations/consul_data/httpconnection'
 
 # Get the value of a key from Consul
 Puppet::Functions.create_function(:'consul_data::get_key') do
@@ -20,13 +21,10 @@ Puppet::Functions.create_function(:'consul_data::get_key') do
   #   All options other than 'string' assume the data is stored in JSON format.
   # @return the value of the key in the specified format
   def get_key(consul_url, key, key_return_format = 'string')
-    uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
-
-    consul_response = connection.get("/v1/kv/#{key}?raw=true")
+    http_connection = PuppetX::Ploperations::ConsulData::HTTPConnection.new(consul_url)
+    consul_response = http_connection.connection.get("/v1/kv/#{key}?raw=true")
     unless consul_response.is_a?(Net::HTTPOK)
-      message = "Received #{consul_response.code} response code from Consul at #{uri.host} for key #{key}"
+      message = "Received #{consul_response.code} response code from Consul at #{http_connection.uri.host} for key #{key}"
       raise Puppet::Error, PuppetX::Ploperations::ConsulData::Common.append_api_errors(message, consul_response)
     end
 

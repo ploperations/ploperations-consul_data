@@ -1,4 +1,5 @@
 require_relative '../../../puppet_x/ploperations/consul_data/common'
+require_relative '../../../puppet_x/ploperations/consul_data/httpconnection'
 
 # Set, update, or delete a key in Consul
 Puppet::Functions.create_function(:'consul_data::set_key') do
@@ -28,14 +29,11 @@ Puppet::Functions.create_function(:'consul_data::set_key') do
   # @param key The key you wish to delete
   # @param value `undef` is the only valid value here
   def delete_key(consul_url, key, _value)
-    uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    http_connection = PuppetX::Ploperations::ConsulData::HTTPConnection.new(consul_url)
     action = 'deleting'
+    consul_response = http_connection.connection.delete("/v1/kv/#{key}")
 
-    consul_response = connection.delete("/v1/kv/#{key}")
-
-    process_response(uri, key, consul_response, action)
+    process_response(http_connection.uri, key, consul_response, action)
   end
 
   # @summary Update a key to a string value in Consul
@@ -46,14 +44,11 @@ Puppet::Functions.create_function(:'consul_data::set_key') do
   # @param key The key you wish to update
   # @param value The string that you wish to have set as the value for the key
   def set_key_as_string(consul_url, key, value)
-    uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    http_connection = PuppetX::Ploperations::ConsulData::HTTPConnection.new(consul_url)
     action = 'setting'
+    consul_response = http_connection.connection.put("/v1/kv/#{key}", value, 'Content-Type' => 'application/octet-stream')
 
-    consul_response = connection.put("/v1/kv/#{key}", value, 'Content-Type' => 'application/octet-stream')
-
-    process_response(uri, key, consul_response, action)
+    process_response(http_connection.uri, key, consul_response, action)
   end
 
   # @summary Update a key to a json value in Consul
@@ -64,13 +59,10 @@ Puppet::Functions.create_function(:'consul_data::set_key') do
   # @param key The key you wish to update
   # @param value The array or hash that you wish to be stored in Consul as JSON
   def set_key_as_json(consul_url, key, value)
-    uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    http_connection = PuppetX::Ploperations::ConsulData::HTTPConnection.new(consul_url)
+    consul_response = http_connection.connection.put("/v1/kv/#{key}", value.to_json, 'Content-Type' => 'application/octet-stream')
 
-    consul_response = connection.put("/v1/kv/#{key}", value.to_json, 'Content-Type' => 'application/octet-stream')
-
-    process_response(uri, key, consul_response, 'setting')
+    process_response(http_connection.uri, key, consul_response, 'setting')
   end
 
   private

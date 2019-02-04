@@ -1,4 +1,5 @@
 require_relative '../../../puppet_x/ploperations/consul_data/common'
+require_relative '../../../puppet_x/ploperations/consul_data/httpconnection'
 
 # Querys for nodes providing a given service
 Puppet::Functions.create_function(:'consul_data::get_service_nodes') do
@@ -15,13 +16,10 @@ Puppet::Functions.create_function(:'consul_data::get_service_nodes') do
   # @param service The service you want to get a list of nodes for
   # @return A hash representing the JSON response from Consul
   def get_service_nodes(consul_url, service)
-    uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
-
-    consul_response = connection.get("/v1/catalog/service/#{service}")
+    http_connection = PuppetX::Ploperations::ConsulData::HTTPConnection.new(consul_url)
+    consul_response = http_connection.connection.get("/v1/catalog/service/#{service}")
     unless consul_response.is_a?(Net::HTTPOK)
-      message = "Received #{consul_response.code} response code from Consul at #{uri.host} for service #{service}"
+      message = "Received #{consul_response.code} response code from Consul at #{http_connection.uri.host} for service #{service}"
       raise Puppet::Error, PuppetX::Ploperations::ConsulData::Common.append_api_errors(message, consul_response)
     end
 
