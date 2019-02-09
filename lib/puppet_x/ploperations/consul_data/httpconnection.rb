@@ -4,6 +4,7 @@ require_relative './common'
 module PuppetX
   module Ploperations
     module ConsulData
+      # Custom class for creating HTTP connections to the Consul API
       class HTTPConnection
         def initialize(consul_url)
           @uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
@@ -11,10 +12,12 @@ module PuppetX
           @connection = Puppet::Network::HttpPool.http_instance(@uri.host, @uri.port, use_ssl)
         end
 
+        # Accessor method for connection object
         def connection
           @connection
         end
 
+        # Accessor method for uri object
         def uri
           @uri
         end

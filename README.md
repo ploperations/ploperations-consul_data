@@ -27,6 +27,10 @@ and pluginsync being enabled.
 
 ## Usage & Reference
 
+_Note: additional documentation is in [REFERENCE.md](REFERENCE.md)_
+_The docs below are provided to supplement what `puppet-strings`_
+_generates as it doesn't pick up all the tags in the source code._
+
 **`consul_data::get_key($consul_url, $key, $key_return_format)`**
 
 Get the value of a key from Consul

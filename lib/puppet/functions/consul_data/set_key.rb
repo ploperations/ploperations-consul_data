@@ -3,22 +3,46 @@ require_relative '../../../puppet_x/ploperations/consul_data/httpconnection'
 
 # Set, update, or delete a key in Consul
 Puppet::Functions.create_function(:'consul_data::set_key') do
+  # @summary Delete a key in Consul
+  #
+  # Delete a key in Consul
+  #
+  # @param consul_url The full url including port for querying Consul
+  # @param key The key you wish to delete
+  # @param value `undef` is the only valid value here
   dispatch :delete_key do
     required_param 'String[1]', :consul_url
     required_param 'String[1]', :key
     required_param 'Undef', :value
+    return_type 'Undef'
   end
 
+  # @summary Update a key to a string value in Consul
+  #
+  # Update a key to a string value in Consul
+  #
+  # @param consul_url The full url including port for querying Consul
+  # @param key The key you wish to update
+  # @param value The string that you wish to have set as the value for the key
   dispatch :set_key_as_string do
     required_param 'String[1]', :consul_url
     required_param 'String[1]', :key
     required_param 'String[1]', :value
+    return_type 'Undef'
   end
 
+  # @summary Update a key to a json value in Consul
+  #
+  # Update a key to a json value in Consul
+  #
+  # @param consul_url The full url including port for querying Consul
+  # @param key The key you wish to update
+  # @param value The array or hash that you wish to be stored in Consul as JSON
   dispatch :set_key_as_json do
     required_param 'String[1]', :consul_url
     required_param 'String[1]', :key
     required_param 'Variant[Hash, Array[Hash]]', :value
+    return_type 'Undef'
   end
 
   # @summary Delete a key in Consul

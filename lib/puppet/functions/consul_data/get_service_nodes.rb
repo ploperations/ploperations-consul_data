@@ -3,9 +3,23 @@ require_relative '../../../puppet_x/ploperations/consul_data/httpconnection'
 
 # Querys for nodes providing a given service
 Puppet::Functions.create_function(:'consul_data::get_service_nodes') do
+  # @summary Querys for nodes providing a given service
+  #
+  # Querys for nodes providing a given service
+  #
+  # @example Get a list of nodes running Consul and their IP addresses
+  #   $data = consul_data::get_service_nodes('https://consul-app.example.com:8500', 'consul')
+  #   $data.each |$consul_node| {
+  #     notify { "${consul_node['Node']} is at ${consul_node['Address']}": }
+  #   }
+  #
+  # @param consul_url The full url including port for querying Consul
+  # @param service The service you want to get a list of nodes for
+  # @return A hash representing the JSON response from Consul
   dispatch :get_service_nodes do
     required_param 'String[1]', :consul_url
     required_param 'String[1]', :service
+    return_type 'Variant[Array[Hash], Hash]'
   end
 
   # @summary Querys for nodes providing a given service
