@@ -14,8 +14,8 @@ module PuppetX
         def self.append_api_errors(message, response)
           errors = begin
                       JSON.parse(response.body)['errors']
-                    rescue StandardError
-                      nil
+                   rescue StandardError
+                     nil
                     end
           message << " (api errors: #{errors})" if errors
         end
