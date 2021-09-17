@@ -2,11 +2,6 @@ require_relative '../../../puppet_x/ploperations/consul_data/common'
 
 # Querys for nodes providing a given service
 Puppet::Functions.create_function(:'consul_data::get_service_nodes') do
-  dispatch :get_service_nodes do
-    required_param 'String[1]', :consul_url
-    required_param 'String[1]', :service
-  end
-
   # @summary Querys for nodes providing a given service
   #
   # Querys for nodes providing a given service
@@ -14,6 +9,11 @@ Puppet::Functions.create_function(:'consul_data::get_service_nodes') do
   # @param consul_url The full url including port for querying Consul
   # @param service The service you want to get a list of nodes for
   # @return A hash representing the JSON response from Consul
+  dispatch :get_service_nodes do
+    required_param 'String[1]', :consul_url
+    required_param 'String[1]', :service
+  end
+
   def get_service_nodes(consul_url, service)
     uri = PuppetX::Ploperations::ConsulData::Common.parse_consul_url(consul_url)
     use_ssl = uri.scheme == 'https'

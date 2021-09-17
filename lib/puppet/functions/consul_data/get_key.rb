@@ -2,6 +2,17 @@ require_relative '../../../puppet_x/ploperations/consul_data/common'
 
 # Get the value of a key from Consul
 Puppet::Functions.create_function(:'consul_data::get_key') do
+  # @summary Get the value of a key from Consul
+  #
+  # Get the value of a key from Consul
+  #
+  # @param consul_url The full url including port for querying Consul
+  # @param key The key you wish to query for
+  # @param key_return_format
+  #   The format in which to return the value of the key key.
+  #   Defaults to 'string' but may also be 'hash', json', or 'json_pretty'.
+  #   All options other than 'string' assume the data is stored in JSON format.
+  # @return the value of the key in the specified format
   dispatch :get_key do
     required_param 'String[1]', :consul_url
     required_param 'String[1]', :key

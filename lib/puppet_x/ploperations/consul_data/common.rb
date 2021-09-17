@@ -1,6 +1,8 @@
 # rubocop:disable Style/ClassAndModuleChildren
 module PuppetX
+  # Add module to ploperations namespace
   module Ploperations
+    # add module to consul_data namespace
     module ConsulData
       # methods used in multiple functions
       class Common
