@@ -1,7 +1,7 @@
 {
   "name": "ploperations-consul_data",
-  "version": "0.1.0",
-  "author": "InfraCore at Puppet",
+  "version": "1.0.0",
+  "author": "ploperations",
   "summary": "ploperations-consul_data provides a simple way to get or set key/value pairs and query for the nodes backing a service in Consul.",
   "license": "Apache-2.0",
   "source": "https://github.com/ploperations/ploperations-consul_data.git",
